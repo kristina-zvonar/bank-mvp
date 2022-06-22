@@ -17,7 +17,7 @@ CREATE TABLE "accounts" (
   "balance" decimal NOT NULL,
   "currency" varchar NOT NULL,
   "active" boolean NOT NULL DEFAULT true,
-  "locked" boolean NOT NULL DEFAULT true,
+  "locked" boolean NOT NULL DEFAULT false,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
   "client_id" bigint NOT NULL
 );
