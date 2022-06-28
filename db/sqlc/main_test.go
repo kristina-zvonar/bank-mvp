@@ -15,13 +15,15 @@ var config map[string]string = map[string]string{
 }
 
 var testQueries *Queries
+var testDB *sql.DB
 
 func TestMain(m *testing.M) {
-	conn, err := sql.Open(config["dbDriver"], config["dbSource"])
+	var err error
+	testDB, err = sql.Open(config["dbDriver"], config["dbSource"])
 	if err != nil {
 		log.Fatalln("Cannot connect to DB:", err)
 	}
 
-	testQueries = New(conn)
+	testQueries = New(testDB)
 	os.Exit(m.Run())
 }
