@@ -8,6 +8,8 @@ package db
 import (
 	"context"
 	"database/sql"
+
+	"github.com/shopspring/decimal/decimal"
 )
 
 const createTransaction = `-- name: CreateTransaction :one
@@ -26,13 +28,13 @@ RETURNING id, amount, source_account_id, dest_account_id, ext_source_account_id,
 `
 
 type CreateTransactionParams struct {
-	Amount             string         `json:"amount"`
-	SourceAccountID    sql.NullInt64  `json:"source_account_id"`
-	DestAccountID      sql.NullInt64  `json:"dest_account_id"`
-	ExtSourceAccountID sql.NullString `json:"ext_source_account_id"`
-	ExtDestAccountID   sql.NullString `json:"ext_dest_account_id"`
-	Category           int32          `json:"category"`
-	ServiceID          sql.NullInt64  `json:"service_id"`
+	Amount             decimal.Decimal `json:"amount"`
+	SourceAccountID    sql.NullInt64   `json:"source_account_id"`
+	DestAccountID      sql.NullInt64   `json:"dest_account_id"`
+	ExtSourceAccountID sql.NullString  `json:"ext_source_account_id"`
+	ExtDestAccountID   sql.NullString  `json:"ext_dest_account_id"`
+	Category           int32           `json:"category"`
+	ServiceID          sql.NullInt64   `json:"service_id"`
 }
 
 func (q *Queries) CreateTransaction(ctx context.Context, arg CreateTransactionParams) (Transaction, error) {

@@ -9,3 +9,6 @@ packages:
     emit_prepared_queries: true
     emit_interface: false
     emit_exact_table_names: false
+overrides:
+  - db_type: "pg_catalog.numeric"
+    go_type: "github.com/shopspring/decimal/decimal.Decimal"

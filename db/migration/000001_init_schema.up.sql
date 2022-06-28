@@ -14,7 +14,7 @@ CREATE TABLE "clients" (
 
 CREATE TABLE "accounts" (
   "id" bigserial PRIMARY KEY,
-  "balance" decimal NOT NULL,
+  "balance" numeric NOT NULL,
   "currency" varchar NOT NULL,
   "active" boolean NOT NULL DEFAULT true,
   "locked" boolean NOT NULL DEFAULT false,
@@ -45,7 +45,7 @@ CREATE TABLE "banks" (
 
 CREATE TABLE "transactions" (
   "id" bigserial PRIMARY KEY,
-  "amount" decimal NOT NULL,
+  "amount" numeric NOT NULL,
   "source_account_id" bigint,
   "dest_account_id" bigint,
   "ext_source_account_id" varchar,
