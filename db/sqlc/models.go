@@ -8,7 +8,7 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/shopspring/decimal/decimal"
+	"github.com/shopspring/decimal"
 )
 
 type Account struct {

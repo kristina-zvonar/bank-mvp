@@ -11,7 +11,7 @@ import (
 func createRandomAccount(t *testing.T) Account {
 	arg := CreateAccountParams{
 		ClientID: createRandomClient(t).ID,
-		Balance:  util.RandomInt(1, 50),
+		Balance:  util.RandomDecimal(1, 50),
 		Currency: util.RandomString(3),
 	}
 

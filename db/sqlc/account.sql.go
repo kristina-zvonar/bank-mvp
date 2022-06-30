@@ -8,7 +8,7 @@ package db
 import (
 	"context"
 
-	"github.com/shopspring/decimal/decimal"
+	"github.com/shopspring/decimal"
 )
 
 const createAccount = `-- name: CreateAccount :one

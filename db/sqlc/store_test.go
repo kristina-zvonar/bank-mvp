@@ -3,6 +3,7 @@ package db
 import (
 	"bank-mvp/util"
 	"context"
+	"database/sql"
 	"testing"
 
 	"github.com/shopspring/decimal"
@@ -24,8 +25,14 @@ func TestTransferTx(t *testing.T) {
 	for i := int64(0); i < n; i++ {
 		go func() {
 			result, err := store.TransferTx(context.Background(), TransactionTxParams{
-				SourceAccountID: acc1.ID,
-				DestAccountID: acc2.ID,
+				SourceAccountID: sql.NullInt64{
+					Int64: acc1.ID,
+					Valid: true,
+				},
+				DestAccountID: sql.NullInt64{
+					Int64: acc2.ID,
+					Valid: true,
+				},
 				Amount: amount,
 			})
 
@@ -45,8 +52,8 @@ func TestTransferTx(t *testing.T) {
 		// check bank transaction
 		transaction := result.Transaction
 		require.NotEmpty(t, transaction)
-		require.Equal(t, acc1.ID, transaction.SourceAccountID)
-		require.Equal(t, acc2.ID, transaction.DestAccountID)
+		require.Equal(t, acc1.ID, transaction.SourceAccountID.Int64)
+		require.Equal(t, acc2.ID, transaction.DestAccountID.Int64)
 		require.Equal(t, amount, transaction.Amount)
 		require.NotZero(t, transaction.ID)
 

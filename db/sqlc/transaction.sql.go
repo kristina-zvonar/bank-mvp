@@ -9,7 +9,7 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/shopspring/decimal/decimal"
+	"github.com/shopspring/decimal"
 )
 
 const createTransaction = `-- name: CreateTransaction :one
