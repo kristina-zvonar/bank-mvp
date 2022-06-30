@@ -60,6 +60,34 @@ func TestTransferTx(t *testing.T) {
 		_, err = store.GetTransaction(context.Background(), transaction.ID)
 		require.NoError(t, err)
 
-		// TODO check accounts'  balance
+		// check accounts
+		sourceAccount := result.SourceAccount
+		require.NotEmpty(t, sourceAccount)
+		require.Equal(t, acc1.ID, sourceAccount.ID)
+
+		destAccount := result.DestAccount
+		require.NotEmpty(t, destAccount)
+		require.Equal(t, acc2.ID, destAccount.ID)
+
+		// check accounts' balance
+		diff1 := acc1.Balance.Sub(sourceAccount.Balance)
+		diff2 := destAccount.Balance.Sub(acc2.Balance)
+
+		require.Equal(t, diff1, diff2)
+		require.Positive(t, diff1)
+				
+		quotient := diff1.Div(amount)
+		require.True(t, quotient.GreaterThanOrEqual(decimal.NewFromInt(1)) && quotient.LessThanOrEqual(decimal.NewFromInt(n)))
+
 	}
+
+	// check final balance
+	finalAmount := amount.Mul(decimal.NewFromInt(n))
+	updatedAcc1, err := testQueries.GetAccount(context.Background(), acc1.ID)
+	require.NoError(t, err)
+	require.True(t, acc1.Balance.Sub(finalAmount).Equal(updatedAcc1.Balance))
+	
+	updatedAcc2, err := testQueries.GetAccount(context.Background(), acc2.ID)
+	require.NoError(t, err)
+	require.True(t, acc2.Balance.Add(finalAmount).Equal(updatedAcc2.Balance))
 }
