@@ -17,7 +17,7 @@ INSERT INTO accounts
 VALUES ($1, $2, $3)
 RETURNING *;
 
--- name: UpdateAccount :many
+-- name: UpdateAccount :one
 UPDATE accounts
 SET
     balance = $2,
