@@ -74,7 +74,7 @@ func TestTransferTx(t *testing.T) {
 		diff2 := destAccount.Balance.Sub(acc2.Balance)
 
 		require.Equal(t, diff1, diff2)
-		require.Positive(t, diff1)
+		require.True(t, diff1.GreaterThan(decimal.Zero))
 				
 		quotient := diff1.Div(amount)
 		require.True(t, quotient.GreaterThanOrEqual(decimal.NewFromInt(1)) && quotient.LessThanOrEqual(decimal.NewFromInt(n)))

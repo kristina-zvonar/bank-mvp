@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 
 	"github.com/shopspring/decimal"
@@ -74,7 +75,44 @@ func (store *Store) TransferTx(ctx context.Context, arg TransactionTxParams) (Tr
 			Amount: arg.Amount,
 		})
 
-		// TODO: update accounts' balance
+		// get and update account's or accounts' balance
+		if arg.SourceAccountID.Valid {
+			sourceAccount, err := q.GetAccount(ctx, arg.SourceAccountID.Int64)
+			if err != nil {
+				return err
+			}
+
+			result.SourceAccount, err = q.UpdateAccount(ctx, UpdateAccountParams{
+				ID: sourceAccount.ID,
+				Balance: sourceAccount.Balance.Sub(arg.Amount),
+			})
+			if err != nil {
+				return err
+			}
+		} else if(len(arg.ExtDestAccountID.String) > 0) {
+			result.ExtSourceAccount = arg.ExtSourceAccountID.String
+		} else {
+			return errors.New("error: must provide either internal or external bank account ID")
+		}
+
+		if arg.DestAccountID.Valid {
+			destAccount, err := q.GetAccount(ctx, arg.DestAccountID.Int64)
+			if err != nil {
+				return err
+			}
+
+			result.DestAccount, err = q.UpdateAccount(ctx, UpdateAccountParams{
+				ID: destAccount.ID,
+				Balance: destAccount.Balance.Add(arg.Amount),
+			})
+			if err != nil {
+				return err
+			}
+		} else if(len(arg.ExtDestAccountID.String) > 0) {
+			result.ExtDestAccount = arg.ExtDestAccountID.String
+		} else {
+			return errors.New("error: must provide either internal or external bank account ID")
+		}
 
 		if err != nil {
 			return err
