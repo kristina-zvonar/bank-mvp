@@ -60,6 +60,8 @@ type TransactionTxResult struct {
 	ExtDestAccount string `json:"ext_dest_acc"`
 }
 
+var txKey = struct{}{}
+
 // TransferTx performs a money transfer from one account to the other
 // It creates a transfer record and update accounts' balance within a single database transaction
 func (store *Store) TransferTx(ctx context.Context, arg TransactionTxParams) (TransactionTxResult, error) {
@@ -74,10 +76,10 @@ func (store *Store) TransferTx(ctx context.Context, arg TransactionTxParams) (Tr
 			ExtDestAccountID: arg.ExtDestAccountID,
 			Amount: arg.Amount,
 		})
-
+		
 		// get and update account's or accounts' balance
 		if arg.SourceAccountID.Valid {
-			sourceAccount, err := q.GetAccount(ctx, arg.SourceAccountID.Int64)
+			sourceAccount, err := q.GetAccountForUpdate(ctx, arg.SourceAccountID.Int64)
 			if err != nil {
 				return err
 			}
@@ -94,9 +96,9 @@ func (store *Store) TransferTx(ctx context.Context, arg TransactionTxParams) (Tr
 		} else {
 			return errors.New("error: must provide either internal or external bank account ID")
 		}
-
+		
 		if arg.DestAccountID.Valid {
-			destAccount, err := q.GetAccount(ctx, arg.DestAccountID.Int64)
+			destAccount, err := q.GetAccountForUpdate(ctx, arg.DestAccountID.Int64)
 			if err != nil {
 				return err
 			}

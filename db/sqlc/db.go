@@ -45,6 +45,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getAccountStmt, err = db.PrepareContext(ctx, getAccount); err != nil {
 		return nil, fmt.Errorf("error preparing query GetAccount: %w", err)
 	}
+	if q.getAccountForUpdateStmt, err = db.PrepareContext(ctx, getAccountForUpdate); err != nil {
+		return nil, fmt.Errorf("error preparing query GetAccountForUpdate: %w", err)
+	}
 	if q.getCardStmt, err = db.PrepareContext(ctx, getCard); err != nil {
 		return nil, fmt.Errorf("error preparing query GetCard: %w", err)
 	}
@@ -122,6 +125,11 @@ func (q *Queries) Close() error {
 	if q.getAccountStmt != nil {
 		if cerr := q.getAccountStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getAccountStmt: %w", cerr)
+		}
+	}
+	if q.getAccountForUpdateStmt != nil {
+		if cerr := q.getAccountForUpdateStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getAccountForUpdateStmt: %w", cerr)
 		}
 	}
 	if q.getCardStmt != nil {
@@ -226,53 +234,55 @@ func (q *Queries) queryRow(ctx context.Context, stmt *sql.Stmt, query string, ar
 }
 
 type Queries struct {
-	db                    DBTX
-	tx                    *sql.Tx
-	createAccountStmt     *sql.Stmt
-	createCardStmt        *sql.Stmt
-	createClientStmt      *sql.Stmt
-	createServiceStmt     *sql.Stmt
-	createTransactionStmt *sql.Stmt
-	deleteServiceStmt     *sql.Stmt
-	getAccountStmt        *sql.Stmt
-	getCardStmt           *sql.Stmt
-	getClientStmt         *sql.Stmt
-	getServiceStmt        *sql.Stmt
-	getTransactionStmt    *sql.Stmt
-	listAccountsStmt      *sql.Stmt
-	listCardsStmt         *sql.Stmt
-	listClientsStmt       *sql.Stmt
-	listServicesStmt      *sql.Stmt
-	listTransactionsStmt  *sql.Stmt
-	updateAccountStmt     *sql.Stmt
-	updateCardStmt        *sql.Stmt
-	updateClientStmt      *sql.Stmt
-	updateServiceStmt     *sql.Stmt
+	db                      DBTX
+	tx                      *sql.Tx
+	createAccountStmt       *sql.Stmt
+	createCardStmt          *sql.Stmt
+	createClientStmt        *sql.Stmt
+	createServiceStmt       *sql.Stmt
+	createTransactionStmt   *sql.Stmt
+	deleteServiceStmt       *sql.Stmt
+	getAccountStmt          *sql.Stmt
+	getAccountForUpdateStmt *sql.Stmt
+	getCardStmt             *sql.Stmt
+	getClientStmt           *sql.Stmt
+	getServiceStmt          *sql.Stmt
+	getTransactionStmt      *sql.Stmt
+	listAccountsStmt        *sql.Stmt
+	listCardsStmt           *sql.Stmt
+	listClientsStmt         *sql.Stmt
+	listServicesStmt        *sql.Stmt
+	listTransactionsStmt    *sql.Stmt
+	updateAccountStmt       *sql.Stmt
+	updateCardStmt          *sql.Stmt
+	updateClientStmt        *sql.Stmt
+	updateServiceStmt       *sql.Stmt
 }
 
 func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 	return &Queries{
-		db:                    tx,
-		tx:                    tx,
-		createAccountStmt:     q.createAccountStmt,
-		createCardStmt:        q.createCardStmt,
-		createClientStmt:      q.createClientStmt,
-		createServiceStmt:     q.createServiceStmt,
-		createTransactionStmt: q.createTransactionStmt,
-		deleteServiceStmt:     q.deleteServiceStmt,
-		getAccountStmt:        q.getAccountStmt,
-		getCardStmt:           q.getCardStmt,
-		getClientStmt:         q.getClientStmt,
-		getServiceStmt:        q.getServiceStmt,
-		getTransactionStmt:    q.getTransactionStmt,
-		listAccountsStmt:      q.listAccountsStmt,
-		listCardsStmt:         q.listCardsStmt,
-		listClientsStmt:       q.listClientsStmt,
-		listServicesStmt:      q.listServicesStmt,
-		listTransactionsStmt:  q.listTransactionsStmt,
-		updateAccountStmt:     q.updateAccountStmt,
-		updateCardStmt:        q.updateCardStmt,
-		updateClientStmt:      q.updateClientStmt,
-		updateServiceStmt:     q.updateServiceStmt,
+		db:                      tx,
+		tx:                      tx,
+		createAccountStmt:       q.createAccountStmt,
+		createCardStmt:          q.createCardStmt,
+		createClientStmt:        q.createClientStmt,
+		createServiceStmt:       q.createServiceStmt,
+		createTransactionStmt:   q.createTransactionStmt,
+		deleteServiceStmt:       q.deleteServiceStmt,
+		getAccountStmt:          q.getAccountStmt,
+		getAccountForUpdateStmt: q.getAccountForUpdateStmt,
+		getCardStmt:             q.getCardStmt,
+		getClientStmt:           q.getClientStmt,
+		getServiceStmt:          q.getServiceStmt,
+		getTransactionStmt:      q.getTransactionStmt,
+		listAccountsStmt:        q.listAccountsStmt,
+		listCardsStmt:           q.listCardsStmt,
+		listClientsStmt:         q.listClientsStmt,
+		listServicesStmt:        q.listServicesStmt,
+		listTransactionsStmt:    q.listTransactionsStmt,
+		updateAccountStmt:       q.updateAccountStmt,
+		updateCardStmt:          q.updateCardStmt,
+		updateClientStmt:        q.updateClientStmt,
+		updateServiceStmt:       q.updateServiceStmt,
 	}
 }

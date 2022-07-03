@@ -42,6 +42,7 @@ func TestTransferTx(t *testing.T) {
 	}
 
 	// check results
+	existed := make(map[int]bool)
 	for i := int64(0); i < n; i++ {
 		err := <-errs
 		require.NoError(t, err)
@@ -75,10 +76,12 @@ func TestTransferTx(t *testing.T) {
 
 		require.Equal(t, diff1, diff2)
 		require.True(t, diff1.GreaterThan(decimal.Zero))
+		require.True(t, diff1.Mod(amount).Equal(decimal.Zero)) // 1 * amount, 2 * amount, 3 * amount, ..., n * amount
 				
 		quotient := diff1.Div(amount)
 		require.True(t, quotient.GreaterThanOrEqual(decimal.NewFromInt(1)) && quotient.LessThanOrEqual(decimal.NewFromInt(n)))
-
+		require.NotContains(t, existed, quotient)
+		existed[int(quotient.IntPart())] = true
 	}
 
 	// check final balance
