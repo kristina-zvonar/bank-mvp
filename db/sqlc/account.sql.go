@@ -11,6 +11,34 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+const addAccountBalance = `-- name: AddAccountBalance :one
+UPDATE accounts
+SET 
+    balance = balance + $1
+WHERE id = $2
+RETURNING id, balance, currency, active, locked, created_at, client_id
+`
+
+type AddAccountBalanceParams struct {
+	Amount decimal.Decimal `json:"amount"`
+	ID     int64           `json:"id"`
+}
+
+func (q *Queries) AddAccountBalance(ctx context.Context, arg AddAccountBalanceParams) (Account, error) {
+	row := q.queryRow(ctx, q.addAccountBalanceStmt, addAccountBalance, arg.Amount, arg.ID)
+	var i Account
+	err := row.Scan(
+		&i.ID,
+		&i.Balance,
+		&i.Currency,
+		&i.Active,
+		&i.Locked,
+		&i.CreatedAt,
+		&i.ClientID,
+	)
+	return i, err
+}
+
 const createAccount = `-- name: CreateAccount :one
 INSERT INTO accounts
 (

@@ -79,14 +79,9 @@ func (store *Store) TransferTx(ctx context.Context, arg TransactionTxParams) (Tr
 		
 		// get and update account's or accounts' balance
 		if arg.SourceAccountID.Valid {
-			sourceAccount, err := q.GetAccountForUpdate(ctx, arg.SourceAccountID.Int64)
-			if err != nil {
-				return err
-			}
-
-			result.SourceAccount, err = q.UpdateAccount(ctx, UpdateAccountParams{
-				ID: sourceAccount.ID,
-				Balance: sourceAccount.Balance.Sub(arg.Amount),
+			result.SourceAccount, err = q.AddAccountBalance(ctx, AddAccountBalanceParams{
+				ID: arg.SourceAccountID.Int64,
+				Amount: arg.Amount.Neg(),
 			})
 			if err != nil {
 				return err
@@ -98,14 +93,9 @@ func (store *Store) TransferTx(ctx context.Context, arg TransactionTxParams) (Tr
 		}
 		
 		if arg.DestAccountID.Valid {
-			destAccount, err := q.GetAccountForUpdate(ctx, arg.DestAccountID.Int64)
-			if err != nil {
-				return err
-			}
-
-			result.DestAccount, err = q.UpdateAccount(ctx, UpdateAccountParams{
-				ID: destAccount.ID,
-				Balance: destAccount.Balance.Add(arg.Amount),
+			result.DestAccount, err = q.AddAccountBalance(ctx, AddAccountBalanceParams{
+				ID: arg.DestAccountID.Int64,
+				Amount: arg.Amount,
 			})
 			if err != nil {
 				return err
