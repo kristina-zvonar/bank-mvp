@@ -77,33 +77,10 @@ func (store *Store) TransferTx(ctx context.Context, arg TransactionTxParams) (Tr
 			Amount: arg.Amount,
 		})
 		
-		// get and update account's or accounts' balance
-		if arg.SourceAccountID.Valid {
-			result.SourceAccount, err = q.AddAccountBalance(ctx, AddAccountBalanceParams{
-				ID: arg.SourceAccountID.Int64,
-				Amount: arg.Amount.Neg(),
-			})
-			if err != nil {
-				return err
-			}
-		} else if(len(arg.ExtDestAccountID.String) > 0) {
-			result.ExtSourceAccount = arg.ExtSourceAccountID.String
+		if(arg.SourceAccountID.Int64 < arg.DestAccountID.Int64) {		
+			result.SourceAccount, result.DestAccount, result.ExtSourceAccount, result.ExtDestAccount, err = addMoney(ctx, q, arg.SourceAccountID, arg.ExtSourceAccountID, arg.Amount.Neg(), arg.DestAccountID, arg.ExtDestAccountID, arg.Amount)
 		} else {
-			return errors.New("error: must provide either internal or external bank account ID")
-		}
-		
-		if arg.DestAccountID.Valid {
-			result.DestAccount, err = q.AddAccountBalance(ctx, AddAccountBalanceParams{
-				ID: arg.DestAccountID.Int64,
-				Amount: arg.Amount,
-			})
-			if err != nil {
-				return err
-			}
-		} else if(len(arg.ExtDestAccountID.String) > 0) {
-			result.ExtDestAccount = arg.ExtDestAccountID.String
-		} else {
-			return errors.New("error: must provide either internal or external bank account ID")
+			result.DestAccount, result.SourceAccount, result.ExtDestAccount, result.ExtSourceAccount, err = addMoney(ctx, q, arg.DestAccountID, arg.ExtDestAccountID, arg.Amount, arg.SourceAccountID, arg.ExtDestAccountID, arg.Amount.Neg())			
 		}
 
 		if err != nil {
@@ -113,4 +90,45 @@ func (store *Store) TransferTx(ctx context.Context, arg TransactionTxParams) (Tr
 	})
 
 	return result, err	
+}
+
+func addMoney(
+	ctx context.Context,
+	q *Queries,
+	accountID1 sql.NullInt64,
+	extAccountID1 sql.NullString,
+	amount1 decimal.Decimal,
+	accountID2 sql.NullInt64,
+	extAccountID2 sql.NullString,
+	amount2 decimal.Decimal,
+) (account1 Account, account2 Account, extAccount1 string, extAccount2 string, err error) {
+	if accountID1.Valid {
+		account1, err = q.AddAccountBalance(ctx, AddAccountBalanceParams{
+			ID: accountID1.Int64,
+			Amount: amount1,
+		})
+		if err != nil {
+			return
+		}
+	} else if(len(extAccountID1.String) > 0) {
+		extAccount1 = extAccountID1.String
+	} else {
+		err = errors.New("error: must provide either internal or external bank account ID")		
+	}
+
+	if accountID2.Valid {
+		account2, err = q.AddAccountBalance(ctx, AddAccountBalanceParams{
+			ID: accountID2.Int64,
+			Amount: amount2,
+		})
+		if err != nil {
+			return
+		}
+	} else if(len(extAccountID2.String) > 0) {
+		extAccount2 = extAccountID2.String
+	} else {
+		err = errors.New("error: must provide either internal or external bank account ID")		
+	}
+
+	return
 }
