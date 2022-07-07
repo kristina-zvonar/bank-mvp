@@ -13,4 +13,7 @@ migrateup:
 migratedown:
 	migrate -path db/migration -database "postgresql://root:root@localhost:5432/bank_mvp?sslmode=disable" -verbose down
 
+test:
+	go test -v -cover ./...
+
 .PHONY: postgres, createdb, dropdb
