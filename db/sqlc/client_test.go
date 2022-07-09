@@ -12,7 +12,7 @@ func createRandomClient(t *testing.T) Client {
 	arg := CreateClientParams {
 		FirstName: util.RandomString(10),
 		LastName: util.RandomString(10),
-		CountryID: util.RandomInt(1, 229),
+		CountryID: util.RandomInt(1, 228),
 	}
 
 	client, err := testQueries.CreateClient(context.Background(), arg)
