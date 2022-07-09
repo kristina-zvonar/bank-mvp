@@ -70,7 +70,7 @@ func (q *Queries) ListServices(ctx context.Context, arg ListServicesParams) ([]S
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Service
+	items := []Service{}
 	for rows.Next() {
 		var i Service
 		if err := rows.Scan(&i.ID, &i.Name, &i.Type); err != nil {

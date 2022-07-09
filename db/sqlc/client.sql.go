@@ -76,7 +76,7 @@ func (q *Queries) ListClients(ctx context.Context, arg ListClientsParams) ([]Cli
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Client
+	items := []Client{}
 	for rows.Next() {
 		var i Client
 		if err := rows.Scan(

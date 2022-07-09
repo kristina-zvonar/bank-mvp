@@ -92,7 +92,7 @@ func (q *Queries) ListCards(ctx context.Context, arg ListCardsParams) ([]Card, e
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Card
+	items := []Card{}
 	for rows.Next() {
 		var i Card
 		if err := rows.Scan(
