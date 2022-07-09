@@ -3,27 +3,27 @@ package main
 import (
 	"bank-mvp/api"
 	db "bank-mvp/db/sqlc"
+	"bank-mvp/util"
 	"database/sql"
 	"log"
 
 	_ "github.com/lib/pq"
 )
 
-var config map[string]string = map[string]string{
-	"dbDriver": "postgres",
-	"dbSource": "postgresql://root:root@localhost:5432/bank_mvp?sslmode=disable",
-	"serverAddress": "0.0.0.0:8080",
-}
-
 func main() {
-	conn, err := sql.Open(config["dbDriver"], config["dbSource"])
+	config, err := util.LoadConfig(".")
+	if err != nil {
+		log.Fatal("Cannot load config:", err)
+	}
+
+	conn, err := sql.Open(config.DBDriver, config.DBSource)
 	if err != nil {
 		log.Fatalln("Cannot connect to DB:", err)
 	}
 
 	store := db.NewStore(conn)
 	server := api.NewServer(store)
-	err = server.Start(config["serverAddress"])
+	err = server.Start(config.ServerAddress)
 	if err != nil {
 		log.Fatal("cannot start server:", err)
 	}
