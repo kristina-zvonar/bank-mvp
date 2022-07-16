@@ -9,21 +9,26 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+type Store interface {
+	Querier
+	TransferTx(ctx context.Context, arg TransactionTxParams) (TransactionTxResult, error)
+}
+
 // Store provides all functions to execute DB queries and transactions
-type Store struct {
+type SQLStore struct {
 	*Queries
 	db *sql.DB
 }
 
-func NewStore(db *sql.DB) *Store {
-	return &Store {
+func NewStore(db *sql.DB) Store {
+	return &SQLStore {
 		db: db,
 		Queries: New(db),
 	}
 }
 
 // execTx executes a function within a database transaction
-func (store *Store) execTx(ctx context.Context, fn func(*Queries) error) error {
+func (store *SQLStore) execTx(ctx context.Context, fn func(*Queries) error) error {
 	tx, err := store.db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
@@ -64,7 +69,7 @@ var txKey = struct{}{}
 
 // TransferTx performs a money transfer from one account to the other
 // It creates a transfer record and update accounts' balance within a single database transaction
-func (store *Store) TransferTx(ctx context.Context, arg TransactionTxParams) (TransactionTxResult, error) {
+func (store *SQLStore) TransferTx(ctx context.Context, arg TransactionTxParams) (TransactionTxResult, error) {
 	var result TransactionTxResult
 
 	err := store.execTx(ctx, func(q *Queries) error {
