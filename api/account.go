@@ -10,7 +10,7 @@ import (
 )
 
 type createAccountRequest struct {
-	Currency string          `json:"currency" binding:"required,oneof=USD EUR"`
+	Currency string          `json:"currency" binding:"required,currency"`
 	ClientID int64           `json:"client_id" binding:"required"`
 }
 

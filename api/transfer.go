@@ -14,7 +14,7 @@ type createTransactionRequest struct {
 	SourceAccountID int64 `json:"source_account_id"`
 	DestAccountID   int64 `json:"dest_account_id"`
 	Amount          decimal.Decimal `json:"amount" binding:"required,gt=0"`
-	Currency 		string `json:"currency"`
+	Currency 		string `json:"currency" binding:"currency"`
 }
 
 func (server *Server) createTransaction(ctx *gin.Context) {
