@@ -43,6 +43,7 @@ type Client struct {
 	CreatedAt time.Time `json:"created_at"`
 	Active    bool      `json:"active"`
 	CountryID int64     `json:"country_id"`
+	UserID    int64     `json:"user_id"`
 }
 
 type Country struct {
@@ -65,4 +66,13 @@ type Transaction struct {
 	ExtDestAccountID   sql.NullString  `json:"ext_dest_account_id"`
 	Category           int32           `json:"category"`
 	ServiceID          sql.NullInt64   `json:"service_id"`
+}
+
+type User struct {
+	ID                int64     `json:"id"`
+	Username          string    `json:"username"`
+	Password          string    `json:"password"`
+	Email             string    `json:"email"`
+	PasswordChangedAt time.Time `json:"password_changed_at"`
+	CreatedAt         time.Time `json:"created_at"`
 }

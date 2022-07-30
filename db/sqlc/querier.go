@@ -15,6 +15,7 @@ type Querier interface {
 	CreateClient(ctx context.Context, arg CreateClientParams) (Client, error)
 	CreateService(ctx context.Context, arg CreateServiceParams) (Service, error)
 	CreateTransaction(ctx context.Context, arg CreateTransactionParams) (Transaction, error)
+	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	DeleteService(ctx context.Context, id int64) error
 	GetAccount(ctx context.Context, id int64) (Account, error)
 	GetAccountForUpdate(ctx context.Context, id int64) (Account, error)
@@ -22,6 +23,7 @@ type Querier interface {
 	GetClient(ctx context.Context, id int64) (Client, error)
 	GetService(ctx context.Context, id int64) (Service, error)
 	GetTransaction(ctx context.Context, id int64) (Transaction, error)
+	GetUser(ctx context.Context, id int64) (User, error)
 	ListAccounts(ctx context.Context, arg ListAccountsParams) ([]Account, error)
 	ListCards(ctx context.Context, arg ListCardsParams) ([]Card, error)
 	ListClients(ctx context.Context, arg ListClientsParams) ([]Client, error)

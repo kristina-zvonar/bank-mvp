@@ -17,7 +17,7 @@ INSERT INTO clients
     country_id
 )
 VALUES ($1, $2, $3)
-RETURNING id, first_name, last_name, created_at, active, country_id
+RETURNING id, first_name, last_name, created_at, active, country_id, user_id
 `
 
 type CreateClientParams struct {
@@ -36,12 +36,13 @@ func (q *Queries) CreateClient(ctx context.Context, arg CreateClientParams) (Cli
 		&i.CreatedAt,
 		&i.Active,
 		&i.CountryID,
+		&i.UserID,
 	)
 	return i, err
 }
 
 const getClient = `-- name: GetClient :one
-SELECT id, first_name, last_name, created_at, active, country_id FROM clients
+SELECT id, first_name, last_name, created_at, active, country_id, user_id FROM clients
 WHERE id = $1 LIMIT 1
 `
 
@@ -55,12 +56,13 @@ func (q *Queries) GetClient(ctx context.Context, id int64) (Client, error) {
 		&i.CreatedAt,
 		&i.Active,
 		&i.CountryID,
+		&i.UserID,
 	)
 	return i, err
 }
 
 const listClients = `-- name: ListClients :many
-SELECT id, first_name, last_name, created_at, active, country_id FROM clients
+SELECT id, first_name, last_name, created_at, active, country_id, user_id FROM clients
 LIMIT $1
 OFFSET $2
 `
@@ -86,6 +88,7 @@ func (q *Queries) ListClients(ctx context.Context, arg ListClientsParams) ([]Cli
 			&i.CreatedAt,
 			&i.Active,
 			&i.CountryID,
+			&i.UserID,
 		); err != nil {
 			return nil, err
 		}
@@ -108,7 +111,7 @@ SET
     country_id = $4,
     active = $5
 WHERE id = $1
-RETURNING id, first_name, last_name, created_at, active, country_id
+RETURNING id, first_name, last_name, created_at, active, country_id, user_id
 `
 
 type UpdateClientParams struct {
@@ -135,6 +138,7 @@ func (q *Queries) UpdateClient(ctx context.Context, arg UpdateClientParams) (Cli
 		&i.CreatedAt,
 		&i.Active,
 		&i.CountryID,
+		&i.UserID,
 	)
 	return i, err
 }
