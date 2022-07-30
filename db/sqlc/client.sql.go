@@ -14,9 +14,10 @@ INSERT INTO clients
 (
     first_name,
     last_name,
-    country_id
+    country_id,
+    user_id
 )
-VALUES ($1, $2, $3)
+VALUES ($1, $2, $3, $4)
 RETURNING id, first_name, last_name, created_at, active, country_id, user_id
 `
 
@@ -24,10 +25,16 @@ type CreateClientParams struct {
 	FirstName string `json:"first_name"`
 	LastName  string `json:"last_name"`
 	CountryID int64  `json:"country_id"`
+	UserID    int64  `json:"user_id"`
 }
 
 func (q *Queries) CreateClient(ctx context.Context, arg CreateClientParams) (Client, error) {
-	row := q.queryRow(ctx, q.createClientStmt, createClient, arg.FirstName, arg.LastName, arg.CountryID)
+	row := q.queryRow(ctx, q.createClientStmt, createClient,
+		arg.FirstName,
+		arg.LastName,
+		arg.CountryID,
+		arg.UserID,
+	)
 	var i Client
 	err := row.Scan(
 		&i.ID,

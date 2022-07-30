@@ -9,10 +9,13 @@ import (
 )
 
 func createRandomClient(t *testing.T) Client {
+	user := createRandomUser(t)
+
 	arg := CreateClientParams {
 		FirstName: util.RandomString(10),
 		LastName: util.RandomString(10),
 		CountryID: util.RandomInt(1, 228),
+		UserID: user.ID,
 	}
 
 	client, err := testQueries.CreateClient(context.Background(), arg)

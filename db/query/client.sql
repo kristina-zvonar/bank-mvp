@@ -12,9 +12,10 @@ INSERT INTO clients
 (
     first_name,
     last_name,
-    country_id
+    country_id,
+    user_id
 )
-VALUES ($1, $2, $3)
+VALUES ($1, $2, $3, $4)
 RETURNING *;
 
 -- name: UpdateClient :one
