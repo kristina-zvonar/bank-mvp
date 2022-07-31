@@ -19,6 +19,9 @@ migratedown:
 migratedown1:
 	migrate -path db/migration -database "postgresql://root:root@localhost:5432/bank_mvp?sslmode=disable" -verbose down 1
 
+migrateforce:
+	migrate -path db/migration -database "postgresql://root:root@localhost:5432/bank_mvp?sslmode=disable" force $(N)
+
 test:
 	go test -v -cover ./...
 
@@ -28,4 +31,4 @@ server:
 mock:
 	mockgen -package mockdb -destination db/mock/store.go bank-mvp/db/sqlc Store
 
-.PHONY: postgres, createdb, dropdb, migrateup, migrateup1, migratedown, migratedown1, test, server, mock
+.PHONY: postgres, createdb, dropdb, migrateup, migrateup1, migratedown, migratedown1, migrateforce, test, server, mock
