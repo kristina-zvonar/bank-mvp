@@ -53,15 +53,20 @@ func TestListClients(t *testing.T) {
 		createRandomClient(t)
 	}
 
+	limit := util.RandomInt(1, 20)
 	arg := ListClientsParams {
-		Limit: 5,
+		Limit: int32(limit),
 		Offset: 0,
 	}
 
 	clients, err := testQueries.ListClients(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, clients)
-	require.True(t, len(clients) >= int(clientCnt))
+	if(clientCnt > limit) {
+		require.True(t, len(clients) == int(limit))
+	} else {
+		require.True(t, len(clients) >= int(clientCnt))
+	}
 
 	for _, client := range clients {
 		require.NotEmpty(t, client)		
