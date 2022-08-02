@@ -2,6 +2,7 @@ package api
 
 import (
 	db "bank-mvp/db/sqlc"
+	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
@@ -44,6 +45,31 @@ func (server *Server) createClient(ctx *gin.Context) {
 			}
 
 		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, client)
+}
+
+type getClientRequest struct {
+	ID int64 `uri:"id" binding:"required,min=1"`
+}
+
+func (server *Server) getClient(ctx *gin.Context) {
+	var req getClientRequest
+	if err := ctx.ShouldBindUri(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	client, err := server.store.GetClient(ctx, req.ID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
