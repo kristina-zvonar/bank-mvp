@@ -5,7 +5,9 @@ import (
 	db "bank-mvp/db/sqlc"
 	"bank-mvp/util"
 	"bytes"
+	"database/sql"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -80,8 +82,83 @@ func TestCreateClientAPI(t *testing.T) {
 	}
 }
 
+func TestGetClientAPI(t *testing.T) {
+	client := randomClient()
+	testCases := []struct{
+		name string
+		clientID int64
+		buildStubs func(store *mockdb.MockStore)
+		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name: "OK",
+			clientID: client.ID,
+			buildStubs: func(store *mockdb.MockStore) {
+				store.EXPECT().GetClient(gomock.Any(), gomock.Eq(client.ID)).Times(1).Return(client, nil)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusOK, recorder.Code)
+				requireBodyMatchClient(t, recorder.Body, client)
+			},
+		},
+		{
+			name: "BadRequest",
+			clientID: 0,
+			buildStubs: func(store *mockdb.MockStore) {
+				store.EXPECT().GetClient(gomock.Any(), gomock.Any()).Times(0).Return(db.Client{}, nil)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			},
+		},
+		{
+			name: "NotFound",
+			clientID: client.ID,
+			buildStubs: func(store *mockdb.MockStore) {
+				store.EXPECT().GetClient(gomock.Any(), gomock.Eq(client.ID)).Times(1).Return(db.Client{}, sql.ErrNoRows)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusNotFound, recorder.Code)
+			},
+		},
+		{
+			name: "InternalServerError",
+			clientID: client.ID,
+			buildStubs: func(store *mockdb.MockStore) {
+				store.EXPECT().GetClient(gomock.Any(), gomock.Eq(client.ID)).Times(1).Return(db.Client{}, sql.ErrConnDone)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			},
+		},
+	}
+
+	for i := range testCases {
+		tc := testCases[i]
+
+		t.Run(tc.name, func (t *testing.T)  {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			store := mockdb.NewMockStore(ctrl)
+			tc.buildStubs(store)
+
+			url := fmt.Sprintf("/clients/%d", tc.clientID)
+			req, err := http.NewRequest(http.MethodGet, url, nil)
+			require.NoError(t, err)
+
+			server := NewServer(store)
+			recorder := httptest.NewRecorder()
+
+			server.router.ServeHTTP(recorder, req)
+			tc.checkResponse(t, recorder)
+		})
+	}
+}
+
 func randomClient() db.Client {
 	return db.Client {
+		ID: util.RandomInt(1, 1000),
 		FirstName: util.RandomString(10),
 		LastName: util.RandomString(10),
 		CountryID: util.RandomInt(1, 228),
