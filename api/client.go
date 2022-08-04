@@ -111,3 +111,32 @@ func (server *Server) updateClient(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, client)
 }
+
+type listClientsParams struct {
+	Page int32 `form:"page" binding:"required,min=1"`
+	PageSize int32 `form:"page_size" binding:"required,min=5,max=100"`
+}
+
+func (server *Server) ListClients(ctx *gin.Context) {
+	var req listClientsParams
+	if err := ctx.ShouldBindQuery(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	arg := db.ListClientsParams {
+		Limit: req.PageSize,
+		Offset: (req.Page - 1) * req.PageSize,
+	}
+	clients, err := server.store.ListClients(ctx, arg)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, clients)
+}
