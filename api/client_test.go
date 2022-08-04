@@ -48,7 +48,7 @@ func TestCreateClientAPI(t *testing.T) {
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
-				requireBodyMatchClient(t, recorder.Body, client)
+				requireBodyMatchClient(t, client, recorder.Body)
 			},
 		},
 	}
@@ -98,7 +98,7 @@ func TestGetClientAPI(t *testing.T) {
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
-				requireBodyMatchClient(t, recorder.Body, client)
+				requireBodyMatchClient(t, client, recorder.Body)
 			},
 		},
 		{
@@ -156,6 +156,64 @@ func TestGetClientAPI(t *testing.T) {
 	}
 }
 
+func TestUpdateClientAPI(t *testing.T) {
+	client := randomClient()
+	testCases := []struct{
+		name string
+		body gin.H
+		buildStubs func(mockStore *mockdb.MockStore)
+		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)
+	} {
+		{
+			name: "OK",
+			body: gin.H{
+				"id": client.ID,
+				"first_name": client.FirstName,
+				"last_name": client.LastName,
+				"country_id": client.CountryID,
+				"active": client.Active,
+			},
+			buildStubs: func(mockStore *mockdb.MockStore) {
+				arg := db.UpdateClientParams {
+					ID: client.ID,
+					FirstName: client.FirstName,
+					LastName: client.LastName,
+					CountryID: client.CountryID,
+					Active: client.Active,
+				}
+				mockStore.EXPECT().UpdateClient(gomock.Any(), gomock.Eq(arg)).Times(1).Return(client, nil)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusOK, recorder.Code)
+				requireBodyMatchClient(t, client, recorder.Body)
+			},
+		},
+	}
+
+	for i := range testCases {
+		tc := testCases[i]
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			mockStore := mockdb.NewMockStore(ctrl)
+			tc.buildStubs(mockStore)
+
+			server := NewServer(mockStore)
+			recorder := httptest.NewRecorder()
+
+			data, err := json.Marshal(tc.body)
+			require.NoError(t, err)
+
+			req, err := http.NewRequest(http.MethodPut, "/clients", bytes.NewReader(data))
+			require.NoError(t, err)
+
+			server.router.ServeHTTP(recorder, req)
+			tc.checkResponse(t, recorder)
+		})
+	}
+}
+
 func randomClient() db.Client {
 	return db.Client {
 		ID: util.RandomInt(1, 1000),
@@ -166,7 +224,7 @@ func randomClient() db.Client {
 	}
 }
 
-func requireBodyMatchClient(t *testing.T, body *bytes.Buffer, client db.Client) {
+func requireBodyMatchClient(t *testing.T, client db.Client, body *bytes.Buffer) {
 	data, err := ioutil.ReadAll(body)
 	require.NoError(t, err)
 

@@ -76,3 +76,38 @@ func (server *Server) getClient(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, client)
 }
+
+type updateClientRequest struct {
+	ID int64 `json:"id" binding:"required,min=1"`
+	FirstName string `json:"first_name"`
+	LastName string `json:"last_name"`
+	CountryID int64 `json:"country_id"`
+	Active bool `json:"active"`
+}
+
+func (server *Server) updateClient(ctx *gin.Context) {
+	var req updateClientRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	arg := db.UpdateClientParams {
+		ID: req.ID,
+		FirstName: req.FirstName,
+		LastName: req.LastName,
+		CountryID: req.CountryID,
+		Active: req.Active,
+	}
+	client, err := server.store.UpdateClient(ctx, arg)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, client)
+}
