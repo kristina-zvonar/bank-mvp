@@ -39,6 +39,20 @@ func TestGetUser(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, user2)
 
+	require.Equal(t, user1.ID, user2.ID)
+	require.Equal(t, user1.Username, user2.Username)
+	require.Equal(t, user1.Password, user2.Password)
+	require.Equal(t, user1.Email, user2.Email)
+}
+
+func TestGetUserByUsername(t *testing.T) {
+	user1 := createRandomUser(t)
+	user2, err := testQueries.GetUserByUsername(context.Background(), user1.Username)
+
+	require.NoError(t, err)
+	require.NotEmpty(t, user2)
+
+	require.Equal(t, user1.ID, user2.ID)
 	require.Equal(t, user1.Username, user2.Username)
 	require.Equal(t, user1.Password, user2.Password)
 	require.Equal(t, user1.Email, user2.Email)
