@@ -47,16 +47,18 @@ func (server *Server) setUpRoutes() {
 	router.POST("/users", server.createUser)
 	router.POST("/users/login", server.loginUser)
 
-	router.GET("/clients", server.ListClients)
-	router.GET("/clients/:id", server.getClient)
-	router.POST("/clients", server.createClient)
-	router.PUT("/clients", server.updateClient)
+	authRoutes := router.Group("/").Use(authMiddleware(server.tokenMaker))
 
-	router.POST("/accounts", server.createAccount)
-	router.GET("/accounts/:id", server.getAccount)
-	router.GET("/accounts", server.listAccount)
+	authRoutes.GET("/clients", server.ListClients)
+	authRoutes.GET("/clients/:id", server.getClient)
+	authRoutes.POST("/clients", server.createClient)
+	authRoutes.PUT("/clients", server.updateClient)
 
-	router.POST("/transactions", server.createTransaction)
+	authRoutes.POST("/accounts", server.createAccount)
+	authRoutes.GET("/accounts/:id", server.getAccount)
+	authRoutes.GET("/accounts", server.listAccount)
+
+	authRoutes.POST("/transactions", server.createTransaction)
 
 	server.router = router
 }
