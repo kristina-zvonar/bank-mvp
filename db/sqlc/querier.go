@@ -21,6 +21,7 @@ type Querier interface {
 	GetAccountForUpdate(ctx context.Context, id int64) (Account, error)
 	GetCard(ctx context.Context, arg GetCardParams) (Card, error)
 	GetClient(ctx context.Context, id int64) (Client, error)
+	GetClientByUser(ctx context.Context, userID int64) (Client, error)
 	GetService(ctx context.Context, id int64) (Service, error)
 	GetTransaction(ctx context.Context, id int64) (Transaction, error)
 	GetUser(ctx context.Context, id int64) (User, error)

@@ -3,6 +3,7 @@ package api
 import (
 	mockdb "bank-mvp/db/mock"
 	db "bank-mvp/db/sqlc"
+	"bank-mvp/token"
 	"bank-mvp/util"
 	"bytes"
 	"database/sql"
@@ -12,6 +13,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
@@ -19,10 +21,13 @@ import (
 )
 
 func TestCreateClientAPI(t *testing.T) {
-	client := randomClient()
+	user := createRandomUser(t)
+	client := randomClientWithUserID(user.ID)
+
 	testCases := []struct {
 		name string
 		body gin.H
+		setupAuth func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStubs func(store *mockdb.MockStore)
 		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)
 	}{
@@ -33,6 +38,9 @@ func TestCreateClientAPI(t *testing.T) {
 				"last_name": client.LastName,
 				"country_id": client.CountryID,
 				"user_id": client.UserID,
+			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.Username, time.Minute)
 			},
 			buildStubs: func (store *mockdb.MockStore) {
 				arg := db.CreateClientParams {
@@ -74,6 +82,7 @@ func TestCreateClientAPI(t *testing.T) {
 			request, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
+			tc.setupAuth(t, request, server.tokenMaker)
 			server.router.ServeHTTP(recorder, request)
 			tc.checkResponse(t, recorder)
 		})	
@@ -83,16 +92,22 @@ func TestCreateClientAPI(t *testing.T) {
 }
 
 func TestGetClientAPI(t *testing.T) {
-	client := randomClient()
+	user := createRandomUser(t)
+	client := randomClientWithUserID(user.ID)
+
 	testCases := []struct{
 		name string
 		clientID int64
+		setupAuth func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStubs func(store *mockdb.MockStore)
 		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)
 	}{
 		{
 			name: "OK",
 			clientID: client.ID,
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.Username, time.Minute)
+			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().GetClient(gomock.Any(), gomock.Eq(client.ID)).Times(1).Return(client, nil)
 			},
@@ -104,6 +119,9 @@ func TestGetClientAPI(t *testing.T) {
 		{
 			name: "BadRequest",
 			clientID: 0,
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.Username, time.Minute)
+			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().GetClient(gomock.Any(), gomock.Any()).Times(0).Return(db.Client{}, nil)
 			},
@@ -114,6 +132,9 @@ func TestGetClientAPI(t *testing.T) {
 		{
 			name: "NotFound",
 			clientID: client.ID,
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.Username, time.Minute)
+			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().GetClient(gomock.Any(), gomock.Eq(client.ID)).Times(1).Return(db.Client{}, sql.ErrNoRows)
 			},
@@ -124,6 +145,9 @@ func TestGetClientAPI(t *testing.T) {
 		{
 			name: "InternalServerError",
 			clientID: client.ID,
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.Username, time.Minute)
+			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().GetClient(gomock.Any(), gomock.Eq(client.ID)).Times(1).Return(db.Client{}, sql.ErrConnDone)
 			},
@@ -150,6 +174,7 @@ func TestGetClientAPI(t *testing.T) {
 			server := newTestServer(t, store)
 			recorder := httptest.NewRecorder()
 
+			tc.setupAuth(t, req, server.tokenMaker)
 			server.router.ServeHTTP(recorder, req)
 			tc.checkResponse(t, recorder)
 		})
@@ -157,10 +182,13 @@ func TestGetClientAPI(t *testing.T) {
 }
 
 func TestUpdateClientAPI(t *testing.T) {
-	client := randomClient()
+	user := createRandomUser(t)
+	client := randomClientWithUserID(user.ID)
+
 	testCases := []struct{
 		name string
 		body gin.H
+		setupAuth func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStubs func(mockStore *mockdb.MockStore)
 		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)
 	} {
@@ -172,6 +200,9 @@ func TestUpdateClientAPI(t *testing.T) {
 				"last_name": client.LastName,
 				"country_id": client.CountryID,
 				"active": client.Active,
+			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.Username, time.Minute)
 			},
 			buildStubs: func(mockStore *mockdb.MockStore) {
 				arg := db.UpdateClientParams {
@@ -197,6 +228,9 @@ func TestUpdateClientAPI(t *testing.T) {
 				"country_id": client.CountryID,
 				"active": client.Active,
 			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.Username, time.Minute)
+			},
 			buildStubs: func(mockStore *mockdb.MockStore) {
 				arg := db.UpdateClientParams {
 					ID: 2000,
@@ -220,6 +254,9 @@ func TestUpdateClientAPI(t *testing.T) {
 				"country_id": client.CountryID,
 				"active": client.Active,
 			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.Username, time.Minute)
+			},
 			buildStubs: func(mockStore *mockdb.MockStore) {
 				arg := db.UpdateClientParams {
 					ID: 0,
@@ -242,6 +279,9 @@ func TestUpdateClientAPI(t *testing.T) {
 				"last_name": client.LastName,
 				"country_id": client.CountryID,
 				"active": client.Active,
+			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.Username, time.Minute)
 			},
 			buildStubs: func(mockStore *mockdb.MockStore) {
 				arg := db.UpdateClientParams {
@@ -277,6 +317,7 @@ func TestUpdateClientAPI(t *testing.T) {
 			req, err := http.NewRequest(http.MethodPut, "/clients", bytes.NewReader(data))
 			require.NoError(t, err)
 
+			tc.setupAuth(t, req, server.tokenMaker)
 			server.router.ServeHTTP(recorder, req)
 			tc.checkResponse(t, recorder)
 		})
@@ -289,16 +330,18 @@ type Query struct {
 }
 
 func TestListClientsAPI(t *testing.T) {
+	user := createRandomUser(t)
 	randomCount := util.RandomInt(5, 10)
 	clients := make([]db.Client, int(randomCount))
 	
 	for i := int64(0); i < randomCount; i++ {
-		clients[i] = randomClient()
+		clients[i] = randomClientWithUserID(user.ID)
 	}
 
 	testCases := []struct{
 		name string
 		query Query
+		setupAuth func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStubs func(mockStore *mockdb.MockStore)
 		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)
 	}{
@@ -307,6 +350,9 @@ func TestListClientsAPI(t *testing.T) {
 			query: Query{
 				Page: 1,
 				PageSize: int32(randomCount),
+			},			
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.Username, time.Minute)
 			},
 			buildStubs: func(mockStore *mockdb.MockStore) {
 				arg := db.ListClientsParams {
@@ -327,6 +373,9 @@ func TestListClientsAPI(t *testing.T) {
 				Page: 0,
 				PageSize: 0,
 			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.Username, time.Minute)
+			},
 			buildStubs: func(mockStore *mockdb.MockStore) {
 				arg := db.ListClientsParams {
 					Limit: 0,
@@ -345,6 +394,9 @@ func TestListClientsAPI(t *testing.T) {
 				Page: 1000,
 				PageSize: int32(randomCount),
 			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.Username, time.Minute)
+			},
 			buildStubs: func(mockStore *mockdb.MockStore) {
 				arg := db.ListClientsParams {
 					Limit: int32(randomCount),
@@ -362,6 +414,9 @@ func TestListClientsAPI(t *testing.T) {
 			query: Query{
 				Page: 1,
 				PageSize: int32(randomCount),
+			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.Username, time.Minute)
 			},
 			buildStubs: func(mockStore *mockdb.MockStore) {
 				arg := db.ListClientsParams {
@@ -399,6 +454,7 @@ func TestListClientsAPI(t *testing.T) {
 
 			req.URL.RawQuery = q.Encode()
 
+			tc.setupAuth(t, req, server.tokenMaker)
 			server.router.ServeHTTP(recorder, req)
 			tc.checkResponse(t, recorder)
 		})

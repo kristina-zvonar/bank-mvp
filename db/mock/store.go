@@ -214,6 +214,21 @@ func (mr *MockStoreMockRecorder) GetClient(arg0, arg1 interface{}) *gomock.Call 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetClient", reflect.TypeOf((*MockStore)(nil).GetClient), arg0, arg1)
 }
 
+// GetClientByUser mocks base method.
+func (m *MockStore) GetClientByUser(arg0 context.Context, arg1 int64) (db.Client, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetClientByUser", arg0, arg1)
+	ret0, _ := ret[0].(db.Client)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetClientByUser indicates an expected call of GetClientByUser.
+func (mr *MockStoreMockRecorder) GetClientByUser(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetClientByUser", reflect.TypeOf((*MockStore)(nil).GetClientByUser), arg0, arg1)
+}
+
 // GetService mocks base method.
 func (m *MockStore) GetService(arg0 context.Context, arg1 int64) (db.Service, error) {
 	m.ctrl.T.Helper()

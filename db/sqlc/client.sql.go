@@ -68,6 +68,26 @@ func (q *Queries) GetClient(ctx context.Context, id int64) (Client, error) {
 	return i, err
 }
 
+const getClientByUser = `-- name: GetClientByUser :one
+SELECT id, first_name, last_name, created_at, active, country_id, user_id FROM clients
+WHERE user_id = $1 LIMIT 1
+`
+
+func (q *Queries) GetClientByUser(ctx context.Context, userID int64) (Client, error) {
+	row := q.queryRow(ctx, q.getClientByUserStmt, getClientByUser, userID)
+	var i Client
+	err := row.Scan(
+		&i.ID,
+		&i.FirstName,
+		&i.LastName,
+		&i.CreatedAt,
+		&i.Active,
+		&i.CountryID,
+		&i.UserID,
+	)
+	return i, err
+}
+
 const listClients = `-- name: ListClients :many
 SELECT id, first_name, last_name, created_at, active, country_id, user_id FROM clients
 LIMIT $1

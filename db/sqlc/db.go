@@ -60,6 +60,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getClientStmt, err = db.PrepareContext(ctx, getClient); err != nil {
 		return nil, fmt.Errorf("error preparing query GetClient: %w", err)
 	}
+	if q.getClientByUserStmt, err = db.PrepareContext(ctx, getClientByUser); err != nil {
+		return nil, fmt.Errorf("error preparing query GetClientByUser: %w", err)
+	}
 	if q.getServiceStmt, err = db.PrepareContext(ctx, getService); err != nil {
 		return nil, fmt.Errorf("error preparing query GetService: %w", err)
 	}
@@ -162,6 +165,11 @@ func (q *Queries) Close() error {
 	if q.getClientStmt != nil {
 		if cerr := q.getClientStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getClientStmt: %w", cerr)
+		}
+	}
+	if q.getClientByUserStmt != nil {
+		if cerr := q.getClientByUserStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getClientByUserStmt: %w", cerr)
 		}
 	}
 	if q.getServiceStmt != nil {
@@ -280,6 +288,7 @@ type Queries struct {
 	getAccountForUpdateStmt *sql.Stmt
 	getCardStmt             *sql.Stmt
 	getClientStmt           *sql.Stmt
+	getClientByUserStmt     *sql.Stmt
 	getServiceStmt          *sql.Stmt
 	getTransactionStmt      *sql.Stmt
 	getUserStmt             *sql.Stmt
@@ -311,6 +320,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getAccountForUpdateStmt: q.getAccountForUpdateStmt,
 		getCardStmt:             q.getCardStmt,
 		getClientStmt:           q.getClientStmt,
+		getClientByUserStmt:     q.getClientByUserStmt,
 		getServiceStmt:          q.getServiceStmt,
 		getTransactionStmt:      q.getTransactionStmt,
 		getUserStmt:             q.getUserStmt,

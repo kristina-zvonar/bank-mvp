@@ -2,7 +2,9 @@ package api
 
 import (
 	db "bank-mvp/db/sqlc"
+	"bank-mvp/token"
 	"database/sql"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -24,11 +26,26 @@ func (server *Server) createTransaction(ctx *gin.Context) {
 		return
 	}
 
-	if req.SourceAccountID != 0 && !server.validAccount(ctx, req.SourceAccountID, req.Currency) {
+	sourceAccount, valid := server.validAccount(ctx, req.SourceAccountID, req.Currency)
+	if req.SourceAccountID != 0 && !valid {
 		return
 	}
 
-	if req.DestAccountID != 0 && !server.validAccount(ctx, req.DestAccountID, req.Currency) {
+	_, valid = server.validAccount(ctx, req.DestAccountID, req.Currency)
+	if req.DestAccountID != 0 && !valid {
+		return
+	}
+
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
+	clientID, err := server.getClientID(ctx, authPayload.Username)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	if req.SourceAccountID != 0 && (sourceAccount.ClientID != clientID) {
+		err := errors.New("from account doesn't belong to the authenticated user")
+		ctx.JSON(http.StatusForbidden, errorResponse(err))
 		return
 	}
 
@@ -54,22 +71,22 @@ func (server *Server) createTransaction(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, transaction)
 }
 
-func (server *Server) validAccount(ctx *gin.Context, accountID int64, currency string) bool {
+func (server *Server) validAccount(ctx *gin.Context, accountID int64, currency string) (db.Account, bool) {
 	account, err := server.store.GetAccount(ctx, accountID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			ctx.JSON(http.StatusBadRequest, errorResponse(err))
-			return false
+			return account, false
 		}
 
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return false
+		return account, false
 	}
 
 	if account.Currency != currency {
 		err = fmt.Errorf("currency mismatch for account ID %d: %s vs %s", accountID, account.Currency, currency)
-		return false
+		return account, false
 	}
 
-	return true
+	return account, true
 }

@@ -2,7 +2,9 @@ package api
 
 import (
 	db "bank-mvp/db/sqlc"
+	"bank-mvp/token"
 	"database/sql"
+	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -11,7 +13,6 @@ import (
 
 type createAccountRequest struct {
 	Currency string          `json:"currency" binding:"required,currency"`
-	ClientID int64           `json:"client_id" binding:"required"`
 }
 
 func (server *Server) createAccount(ctx *gin.Context) {
@@ -21,8 +22,15 @@ func (server *Server) createAccount(ctx *gin.Context) {
 		return
 	}
 
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
+	clientID, err := server.getClientID(ctx, authPayload.Username)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	
 	arg := db.CreateAccountParams {
-		ClientID: req.ClientID,
+		ClientID: clientID,
 		Currency: req.Currency,
 		Balance: decimal.Zero,
 	}
@@ -58,7 +66,33 @@ func (server *Server) getAccount(ctx *gin.Context) {
 		return
 	}
 
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
+	clientID, err := server.getClientID(ctx, authPayload.Username)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	if account.ClientID != clientID {
+		err := errors.New("account doesn't belong to the authenticated user")
+		ctx.JSON(http.StatusForbidden, errorResponse(err))
+		return
+	}
+
 	ctx.JSON(http.StatusOK, account)
+}
+
+func (server *Server) getClientID(ctx *gin.Context, username string) (int64, error) {	
+	user, err := server.store.GetUserByUsername(ctx, username)
+	if err != nil {
+		return 0, err
+	}
+	client, err := server.store.GetClientByUser(ctx, user.ID)
+	if err != nil {
+		return 0, err
+	}
+
+	return client.ID, nil
 }
 
 type listAccountRequest struct {
@@ -73,7 +107,15 @@ func (server *Server) listAccount(ctx *gin.Context) {
 		return
 	}
 
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
+	clientID, err := server.getClientID(ctx, authPayload.Username)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
 	arg := db.ListAccountsParams {
+		ClientID: clientID,
 		Limit: req.PageSize,
 		Offset: (req.PageID - 1) * req.PageSize,
 	}

@@ -9,8 +9,9 @@ FOR NO KEY UPDATE;
 
 -- name: ListAccounts :many
 SELECT * FROM accounts
-LIMIT $1
-OFFSET $2;
+WHERE client_id = $1
+LIMIT $2
+OFFSET $3;
 
 -- name: CreateAccount :one
 INSERT INTO accounts
