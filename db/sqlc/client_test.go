@@ -33,6 +33,14 @@ func createRandomClient(t *testing.T) Client {
 	return client
 }
 
+func requireClientMatch(t *testing.T, client1 Client, client2 Client) {
+	require.Equal(t, client1.ID, client2.ID)
+	require.Equal(t, client1.FirstName, client2.FirstName)
+	require.Equal(t, client1.LastName, client2.LastName)
+	require.Equal(t, client1.CountryID, client2.CountryID)
+	require.Equal(t, client1.Active, client2.Active)
+}
+
 func TestGetClient(t *testing.T) {
 	client1 := createRandomClient(t)	
 	client2, err := testQueries.GetClient(context.Background(), client1.ID)
@@ -40,11 +48,17 @@ func TestGetClient(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, client2)
 
-	require.Equal(t, client1.ID, client2.ID)
-	require.Equal(t, client1.FirstName, client2.FirstName)
-	require.Equal(t, client1.LastName, client2.LastName)
-	require.Equal(t, client1.CountryID, client2.CountryID)
-	require.Equal(t, client1.Active, client2.Active)
+	requireClientMatch(t, client1, client2)
+}
+
+func TestGetClientByUser(t *testing.T) {
+	client1 := createRandomClient(t)
+	client2, err := testQueries.GetClientByUser(context.Background(), client1.UserID)
+
+	require.NoError(t, err)
+	require.NotEmpty(t, client2)
+
+	requireClientMatch(t, client1, client2)
 }
 
 func TestListClients(t *testing.T) {
